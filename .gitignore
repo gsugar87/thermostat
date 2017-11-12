@@ -1,0 +1,13 @@
+*.log
+*.sh
+obsolete_code
+*.png
+*.jpg
+*~
+.swp
+iphone_data.py
+twitter_credentials.py
+email_credentials.py
+pg_credentials.py
+.idea
+*.pyc
