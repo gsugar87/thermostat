@@ -68,15 +68,14 @@ Save these codes and put them wherever you see "sudo /home/pi/433Utils/RPi_utils
         CREATE TABLE status (sleep bool thermostat bool);
         INSERT INTO status (sleep, thermostat) VALUES (false, false);
         CREATE TABLE therm (min float, range float);
-	INSERT INTO therm (min, range) VALUES (70, 1);
+        INSERT INTO therm (min, range) VALUES (70, 1);
         CREATE TABLE temp (now float);
         ALTER USER postgres ENCRYPTED PASSWORD 'your password in pg_credentials.py here';
         \q
         (now you're out of the psql command line)
-	(if you want to allow outside access to your database...)
+        (if you want to allow outside access to your database...)
         sudo nano -c /etc/postgresql/9.4/main/pg_hba.conf
         sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
-
 
 7) Install psycopg2 for python postgresql communication:
 
