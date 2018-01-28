@@ -39,17 +39,42 @@ This needs four more files to work:
 
 4) pg_credentials.py, which has the following lines of code filled in with your postgresql information:
 
-	dbname = 'postgres'
-	user = 'postgres'
-	host = 'localhost'
-	password = 'YOURPASSWORDHERE'
+        dbname = 'postgres'
+        user = 'postgres'
+        host = 'localhost'
+        password = 'YOURPASSWORDHERE'
 
-You will also have to install the libraries that allow for remote control of the wireless switches (433Utils) and find the code used to control each outlet.  You will need to run RFSniffer or a similar program to find the code used to control each outlet.
+5) You will also have to install the libraries that allow for remote control of the wireless switches (433Utils) and find the code used to control each outlet.  You will need to run RFSniffer or a similar program to find the code used to control each outlet.
 
-Also, you will need to set up the postgresql server.
+        git clone --recursive git://github.com/ninjablocks/433Utils.git
+        cd 433Utils/RPi_utils
+        make
+	
+Now you can use RFSniffer to get the RF code you want your raspberry pi to send.  Type in the following command and then press the buttons on your remote that you want to copy.
 
-      sudo apt-get install postgresql postgresql-contrib
-      sudo -u postgres psql postgres
-      sudo nano -c /etc/postgresql/9.4/main/pg_hba.conf
-      sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
-      
+        ./RFSniffer
+
+Save these codes and put them wherever you see "sudo /home/pi/433Utils/RPi_utils/codesend ' in remote_commands.py.
+
+
+6) You will need to set up the postgresql server that will save the temperature history data.
+
+        sudo apt-get install postgresql postgresql-contrib
+        sudo -u postgres psql postgres
+        (now you're on the psql command line)
+        CREATE TABLE temperature_history (datetime timestamp, temp float);
+        ALTER USER postgres ENCRYPTED PASSWORD 'your password in pg_credentials.py here';
+        \q
+        (now you're out of the psql command line)
+        sudo nano -c /etc/postgresql/9.4/main/pg_hba.conf
+        sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
+
+
+7) Install psycopg2 for python postgresql communication:
+
+        sudo apt-get install python-psycopg2
+	
+8) Install other required python libraries:
+
+        pip --no-cache-dir install matplotlib
+	
