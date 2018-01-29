@@ -74,8 +74,25 @@ Save these codes and put them wherever you see "sudo /home/pi/433Utils/RPi_utils
         \q
         (now you're out of the psql command line)
         (if you want to allow outside access to your database...)
-        sudo nano -c /etc/postgresql/9.4/main/pg_hba.conf
+	
+7) Adjust postgresql connection settings.
+
+        sudo nano -c /etc/postgresql/9.6/main/pg_hba.conf
+Add the following to the end of the pg_hba.conf file:
+        
+	host    all            all              192.168.0.0/24          md5
+	host    all            all              192.168.42.75/24          md5
+	host    all            all              192.168.42.64/32          md5
+	host    all            postgres          ::1/128                 md5
+	host    all            postgres         0.0.0.0/0                md5       
+
+Now do the next file...
+
         sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
+Add the following to the end of the postgresql.conf file:
+
+	temperature.max = 70.0
+	temperature.min = 69.0
 
 7) Install psycopg2 for python postgresql communication:
 
