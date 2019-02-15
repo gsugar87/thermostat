@@ -14,7 +14,7 @@ def on1(twitter, sendMessage=True):
     print('turning on outlet 1')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 1 On', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 1 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -26,7 +26,7 @@ def off1(twitter, sendMessage=True):
     print('turning off outlet 1')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 1 Off', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 1 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -38,7 +38,7 @@ def on2(twitter, sendMessage=True):
     print('turning on outlet 2')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 2 On', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 2 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -50,7 +50,7 @@ def off2(twitter, sendMessage=True):
     print('turning off outlet 2')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 2 Off', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 2 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -62,7 +62,7 @@ def on3(twitter, sendMessage=True):
     print('turning on outlet 3')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 3 On', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 3 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -74,7 +74,7 @@ def off3(twitter, sendMessage=True):
     print('turning off outlet 3')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 3 Off', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 3 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -86,7 +86,7 @@ def on4(twitter, sendMessage=True):
     print('turning on outlet 4')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 4 On', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 4 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -98,7 +98,7 @@ def off4(twitter, sendMessage=True):
     print('turning off outlet 4')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='Outlet 4 Off', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='Outlet 4 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -110,7 +110,7 @@ def onAll(twitter, sendMessage=True):
     print('turning on all outlets')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='All Outlets On', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='All Outlets On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 
@@ -122,7 +122,7 @@ def offAll(twitter, sendMessage=True):
     print('turning off all outlets')
     try:
         if sendMessage:
-            twitter.send_direct_message(text='All Outlets Off', screen_name=tc.ok_user_name)
+            twitter.send_direct_message(text='All Outlets Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
 

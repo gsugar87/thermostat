@@ -9,7 +9,7 @@ import numpy as np
 import twitter_credentials as tc
 import camera_commands
 import email_commands
-import postgresql_credentials as psql
+import postgresql_commands as psql
 
 def get_temps():
     try:
@@ -53,9 +53,9 @@ def take_image(twitter):
         # take the picture, send an email, and report it via twitter DM
         camera_commands.save_image('capture.jpg')
         email_commands.send_image('capture.jpg')
-        twitter.send_direct_message(text='Image taken!', screen_name=tc.ok_user_name)
+        twitter.send_direct_message(text='Image taken!', screen_name=tc.ok_user_id)
     except:
-        twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_name)
+        twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_id)
 
 
 def temp(twitter):
@@ -88,17 +88,17 @@ def temp(twitter):
         strToPrint = str(temps[0])
         for i in range(numDevices - 1):
             strToPrint += ", " + str(temps[i + 1])
-        twitter.send_direct_message(text=strToPrint, screen_name=tc.ok_user_name)
+        twitter.send_direct_message(text=strToPrint, screen_name=tc.ok_user_id)
     except:
-        twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_name)
+        twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_id)
 
 
 def tempLog(twitter):
     print('read the temperture log')
     try:
         # TODO have this read from the postgres database!
-        [psqlResult] = psql.getRecentTemp()
-        last_line = psqlResult[1].strftime("%a, %b, %d, %Y, %I:%M:%S")+" %1.2f" % (psqlResult[0])
+        psqlResult = psql.getRecentTemp()
+        last_line = psqlResult[1].strftime("%a, %b, %d, %Y, %I:%M:%S") + "  " + psqlResult[0]
         """
         # read the last line of the most recent temperature log
         # first we need to find the most recently edited file in the directory
@@ -120,14 +120,14 @@ def tempLog(twitter):
         # split the text with new lines and select the second to last line
         last_line = text.split("\n")[-2]
         """
-        twitter.send_direct_message(text=last_line, screen_name=tc.ok_user_name)
+        twitter.send_direct_message(text=last_line, screen_name=tc.ok_user_id)
     except:
-        twitter.send_direct_message(text='Problem with reading the temperature log!', screen_name='GlennSugar')
+        twitter.send_direct_message(text='Problem with reading the temperature log!', screen_name=tc.ok_user_id)
 
 
 def tempPlot(twitter, hrs_to_plot):
     startTime = datetime.datetime.now()-datetime.timedelta(hours=hrs_to_plot)
-
+    
     [datesToPlot, tempsToPlot] = psql.getTempHistory(startTime)
     """ 
     secs_to_plot = hrs_to_plot * 60 * 60
@@ -178,12 +178,15 @@ def tempPlot(twitter, hrs_to_plot):
         fig.autofmt_xdate()
         # ax.fmt_xdata = matplotlib.dates.DateFormatter('g:ia')
         # save the plot
-        matplotlib.pyplot.savefig('/home/pi/temperture_plots/temp_history.png')
-        photo = open('/home/pi/temperture_plots/temp_history.png', 'rb')
-        twitter.update_status_with_media(media=photo, status='Temperature Update')
-        # twitter.upload_media(media=photo, status='Temperture Update')
+        matplotlib.pyplot.savefig('/home/pi/temperature_plots/temp_history.png')
+        photo = open('/home/pi/temperature_plots/temp_history.png', 'rb')
+
+        #twitter.update_status_with_media(media=photo, status='Temperature Update')
+        image_ids = twitter.upload_media(media=photo)
+        twitter.update_status(status='Temperature Update', media_ids=image_ids['media_id'])
         # send the plot to twitter
-        twitter.send_direct_message(media=photo, text='Plot Posted!', screen_name=tc.ok_user_name)
-    except:
+        twitter.send_direct_message(media=photo, text='Plot Posted!', screen_name=tc.ok_user_id)
+    except Exception as e:
         print('problem with plotting function')
-        twitter.send_direct_message(text='Problem with plotting!!', screen_name=tc.ok_user_name)
+        print(e)
+        #twitter.send_direct_message(text='Problem with plotting!!', screen_name=tc.ok_user_id)

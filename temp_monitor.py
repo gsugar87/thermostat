@@ -20,7 +20,7 @@ logFileName = "../bbt/temperatureLog" + time.strftime(fileNameTimeFormat, time.l
 timeFormat = "%a, %b, %d, %Y, %H:%M:%S"
 
 # set the time in seconds between logs (approximate)
-logRateSec = 10
+logRateSec = 20
 # it takes about 3 seconds to read the sensors
 logRateSec -= 3
 

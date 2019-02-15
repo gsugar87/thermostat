@@ -36,6 +36,7 @@ import remote_commands as rc
 import temperature_log_reader as tlr
 import postgresql_commands as psql
 import camera_commands as cc
+import traceback
 
 
 # your twitter consumer and access information goes here
@@ -44,7 +45,8 @@ CONSUMER_SECRET = tc.CONSUMER_SECRET
 ACCESS_TOKEN = tc.ACCESS_TOKEN
 ACCESS_SECRET = tc.ACCESS_SECRET
 # acceptable username
-ok_user_name = tc.ok_user_name
+#ok_user_name = tc.ok_user_name
+ok_user_name = tc.ok_user_id
 
 # set iphone info
 iPhoneIP = iphone.iPhoneIP
@@ -57,7 +59,7 @@ iPhoneStatusNew = 0  # default to 0 (not here)
 twitter = Twython(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
 
 # set if we are using an ac or heater
-isheater = 0
+isheater = 1
 
 # set the sleep_mode variable
 sleep_status = False   # False = sleep mode waiting to start, True = sleep mode has started, waiting to end
@@ -71,7 +73,7 @@ sleep_end_hour_default = 7
 sleep_end_minute_default = 30
 
 # set the thermostat mode variable (0 off, 1 on)
-thermostat_always_off = True
+thermostat_always_off = False
 thermostat_mode = 0
 thermostat_temp = 71
 thermostat_range = 1
@@ -140,8 +142,8 @@ while True:
             thermostat_temp = float(psqlResult[0][0])
             psqlResult = psql.sendReceiveSQL("SELECT range FROM therm;")
             thermostat_range = float(psqlResult[0][0])
-            psqlResult = psql.sendReceiveSQL("SELECT * FROM activeHeaters;")
-            active_heaters = list(psqlResult[0])
+            #psqlResult = psql.sendReceiveSQL("SELECT * FROM activeHeaters;")
+            #active_heaters = list(psqlResult[0])
             psqlResult = psql.sendReceiveSQL("SELECT sleep FROM status")
             sleep_mode = psqlResult[0][0]
             # see if we should change the sleep status
@@ -164,7 +166,10 @@ while True:
                     # WAKING UP!
                     sleep_status = False
                     psql.sendSQL("UPDATE sleep SET active = false;")
-        except:
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             print("Postgresql error!")
 
 
@@ -202,9 +207,9 @@ while True:
 
             #tempF = tlr.get_temp()
             tempFstr = "%.2f" % tempF
-            # psql.sendSQL("DELETE FROM temp WHERE now > 0 OR now <= 0;")
-            # psql.sendSQL("INSERT INTO temp VALUES (" + tempFstr + ");")
-            psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
+            psql.sendSQL("DELETE FROM temp WHERE now > 0 OR now <= 0;")
+            psql.sendSQL("INSERT INTO temp (now) VALUES (" + tempFstr + ");")
+            #psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
             # activate heaters if neccessary
             if tempF < thermostat_temp and not thermostat_always_off:
                 if isheater > 0:
@@ -220,7 +225,10 @@ while True:
                 else:
                     # turn on ac
                     rc.onAll(twitter, sendMessage=False)
-        except:
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             print("Error reading temperatures")
 
     # see if we should check twitter
@@ -266,9 +274,9 @@ while True:
                 tempF = numpy.median(temps)
 
                 tempFstr = "%.2f" % tempF
-                # psql.sendSQL("DELETE FROM temp WHERE now > 0 OR min <= 0;")
-                # psql.sendSQL("INSERT INTO temp VALUES (" + tempFstr + ");")
-                psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
+                psql.sendSQL("DELETE FROM temp WHERE now > 0 OR now <= 0;")
+                psql.sendSQL("INSERT INTO temp (now) VALUES (" + tempFstr + ");")
+                #psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
 
                 # compare to thermostat threshold and send message if needed
                 if thermTweetCheckTime < currentTime:
@@ -291,8 +299,11 @@ while True:
                     else:
                         # turn on ac
                         rc.onAll(twitter, sendMessage=sendTweetUpdate)
-            except:
-               twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_name)
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                print(exc_type, fname, exc_tb.tb_lineno)
+                twitter.send_direct_message(text='Error reading temperatures', screen_name=tc.ok_user_id)
 
         # see if we are in sleep mode
         if sleep_mode != 0:
@@ -311,12 +322,13 @@ while True:
                 # turn off sleep mode
                 sleep_status = 0
                 psql.sendSQL("UPDATE sleep SET active = false;")
-                twitter.send_direct_message(text='Sleep Mode Off', screen_name='GlennSugar')
+                twitter.send_direct_message(text='Sleep Mode Off', screen_name=tc.ok_user_id)
                 print('sleep mode end activated')
 
         # read direct messages
         try:
             direct_messages = twitter.get_direct_messages()
+            direct_messages = direct_messages['events']
         except:
             print('twitter GET rate limit error')
             direct_messages = []
@@ -325,10 +337,12 @@ while True:
         # see if there is a new direct message
         # print('found ' + str(num_messages) + ' messages')
         for i in range(num_messages):
-            sender_name = direct_messages[num_messages - i - 1]['sender_screen_name']
+            #sender_name = direct_messages[num_messages - i - 1]['sender_screen_name']
+            sender_name = direct_messages[num_messages - i -1]['message_create']['sender_id']
             message_id = direct_messages[num_messages - i - 1]['id']
             if sender_name == ok_user_name:
-                message = direct_messages[num_messages - i - 1]['text'].upper()
+                #message = direct_messages[num_messages - i - 1]['text'].upper()
+                message = direct_messages[num_messages - i - 1]['message_create']['message_data']['text'].upper()
                 # see what command was sent
                 print(message)
                 try:
@@ -340,8 +354,9 @@ while True:
                             try:
                                 hoursToPlot = int(message[1:])
                                 tlr.tempPlot(twitter, hoursToPlot)
-                            except:
+                            except Exception as err:
                                 print('could not plot the temp')
+                                traceback.print_tb(err.__traceback__)
                         elif message_split[0] == 'SLEEP':
                             # turn on sleep mode
                             sleep_mode = 1
@@ -355,7 +370,7 @@ while True:
                                     print('start sleep mode tweet received')
                                     twitter.send_direct_message(
                                         text='Sleep mode will start on ' + sleep_start.strftime('%H:%M'),
-                                        screen_name=tc.ok_user_name)
+                                        screen_name=tc.ok_user_id)
 
                                 elif message_split[1] == 'END':
                                     sleep_end = datetime.datetime.now()
@@ -366,7 +381,7 @@ while True:
                                     print('end sleep mode tweet received')
                                     twitter.send_direct_message(
                                         text='Sleep mode will end on ' + sleep_end.strftime('%H:%M'),
-                                        screen_name=tc.ok_user_name)
+                                        screen_name=tc.ok_user_id)
                                 else:
                                     # use the default sleep settings
                                     sleep_start = datetime.datetime.now()
@@ -382,10 +397,10 @@ while True:
                                     print('default sleep mode')
                                     twitter.send_direct_message(
                                         text='Default Sleep mode enabled. Sleep mode will start on ' + sleep_start.strftime(
-                                            '%H:%M'), screen_name=tc.ok_user_name)
+                                            '%H:%M'), screen_name=tc.ok_user_id)
                                     twitter.send_direct_message(
                                         text='Sleep mode will end on ' + sleep_end.strftime('%H:%M'),
-                                        screen_name='GlennSugar')
+                                        screen_name=tc.ok_user_id)
 
                             except:
                                 print('issues with sleep mode tweet read')
@@ -398,49 +413,65 @@ while True:
                                 psql.sendSQL("INSERT INTO therm VALUES (" + str(thermostat_temp) + ", " +
                                              str(thermostat_range) + ");")
                                 #psql.sendSQL("UPDATE therm SET now = " + tempFstr + ";")
-                            except:
+                            except Exception as e:
+                                exc_type, exc_obj, exc_tb = sys.exc_info()
+                                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                                print(exc_type, fname, exc_tb.tb_lineno)
                                 print("Postgresql error!")
                             twitter.send_direct_message(text='Thermostat temp set to ' + message_split[1],
-                                                        screen_name=tc.ok_user_name)
+                                                        screen_name=tc.ok_user_id)
                         elif message_split[0] == 'RANGE':
                             # set the new thermostat range
                             thermostat_range = int(message_split[1])
                             twitter.send_direct_message(
                                 text='Thermostat max temp set to ' + str(int(message_split[1]) + thermostat_temp),
-                                screen_name=tc.ok_user_name)
+                                screen_name=tc.ok_user_id)
                             try:
                                 psql.sendSQL("DELETE FROM therm WHERE min > 0 OR min <= 0;")
                                 psql.sendSQL("INSERT INTO therm VALUES (" + str(thermostat_temp) + ", " +
                                              str(thermostat_range) + ");")
-                            except:
+                            except Exception as e:
+                                exc_type, exc_obj, exc_tb = sys.exc_info()
+                                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                                print(exc_type, fname, exc_tb.tb_lineno)
                                 print("Postgresql error!")
+
                         elif message_split[0] == 'ON':
                             # turn on thermostat mode
                             thermostat_mode = 1
                             psql.sendSQL("UPDATE status SET thermostat = true;")
-                            twitter.send_direct_message(text='Thermostat mode turned on', screen_name=tc.ok_user_name)
+                            twitter.send_direct_message(text='Thermostat mode turned on', screen_name=tc.ok_user_id)
                         elif message_split[0] == 'OFF':
                             # turn off thermostat mode
                             thermostat_mode = 0
                             psql.sendSQL("UPDATE status SET thermostat = false;")
-                            twitter.send_direct_message(text='Thermostat mode turned off', screen_name=tc.ok_user_name)
+                            twitter.send_direct_message(text='Thermostat mode turned off', screen_name=tc.ok_user_id)
                         elif message_split[0] == 'STATUS':
                             # send the status of the thermostat
                             message_to_send = 'Temp: %1.1f, Thermostat Mode: %d,  T Range: %d-%d,  Home: %d' % \
                                               (tlr.get_temp(), thermostat_mode, thermostat_temp,
                                                thermostat_temp+thermostat_range, iPhoneStatusOld)
-                            twitter.send_direct_message(text=message_to_send, screen_name=tc.ok_user_name)
+                            twitter.send_direct_message(text=message_to_send, screen_name=tc.ok_user_id)
                         else:
                             print('unknown twitter command!')
-                            twitter.send_direct_message(text='Did not understand command', screen_name=tc.ok_user_name)
-                    except:
+                            twitter.send_direct_message(text='Did not understand command', screen_name=tc.ok_user_id)
+                    except Exception as e:
+                        exc_type, exc_obj, exc_tb = sys.exc_info()
+                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        print(exc_type, fname, exc_tb.tb_lineno)
                         print('twitter sending error')
-            twitter.destroy_direct_message(id=message_id)
-            print('direct message destroyed')
+            try:
+                twitter.destroy_direct_message(id=message_id)
+                print('direct message destroyed')
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                print(exc_type, fname, exc_tb.tb_lineno)
+                print('error deleting direct message!')
         # end of the tweet check
 
     # see if we should check if the iphone is here
-    if iPhoneCheckTime < currentTime:
+    if iPhoneCheckTime < currentTime and not thermostat_always_off:
         # update the iPhone check time
         iPhoneCheckTime = currentTime + deltaIPhoneCheck
         # ping the iphone
@@ -455,7 +486,7 @@ while True:
                     thermostat_mode = 1
                     psql.sendSQL("UPDATE status SET thermostat = true;")
                     twitter.send_direct_message(text='You came home! Thermostat mode turned on',
-                                                screen_name=tc.ok_user_name)
+                                                screen_name=tc.ok_user_id)
                 iPhoneStatusOld = 1
             else:
                 # iphone is disconnected!
@@ -466,10 +497,13 @@ while True:
                     thermostat_mode = 0
                     psql.sendSQL("UPDATE status SET thermostat = false;")
                     twitter.send_direct_message(text='You left the house!  Thermostat mode and all outlets turned off.',
-                                                screen_name=tc.ok_user_name)
+                                                screen_name=tc.ok_user_id)
                     rc.offAll(twitter)
                 iPhoneStatusOld = 0
-        except:
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             print('Error with iphone pinging')
 
     # see if we should check if the camera sees something

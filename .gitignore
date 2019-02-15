@@ -11,3 +11,5 @@ email_credentials.py
 pg_credentials.py
 .idea
 *.pyc
+nohup.out
+*test.py
