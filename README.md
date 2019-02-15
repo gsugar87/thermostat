@@ -39,17 +39,71 @@ This needs four more files to work:
 
 4) pg_credentials.py, which has the following lines of code filled in with your postgresql information:
 
-	dbname = 'postgres'
-	user = 'postgres'
-	host = 'localhost'
-	password = 'YOURPASSWORDHERE'
+        dbname = 'postgres'
+        user = 'postgres'
+        host = 'localhost'
+        password = 'YOURPASSWORDHERE'
 
-You will also have to install the libraries that allow for remote control of the wireless switches (433Utils) and find the code used to control each outlet.  You will need to run RFSniffer or a similar program to find the code used to control each outlet.
+5) You will also have to install the libraries that allow for remote control of the wireless switches (433Utils) and find the code used to control each outlet.  You will need to run RFSniffer or a similar program to find the code used to control each outlet.
 
-Also, you will need to set up the postgresql server.
+        git clone --recursive git://github.com/ninjablocks/433Utils.git
+        cd 433Utils/RPi_utils
+        make
+	
+Now you can use RFSniffer to get the RF code you want your raspberry pi to send.  Type in the following command and then press the buttons on your remote that you want to copy.
 
-      sudo apt-get install postgresql postgresql-contrib
-      sudo -u postgres psql postgres
-      sudo nano -c /etc/postgresql/9.4/main/pg_hba.conf
-      sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
-      
+        ./RFSniffer
+
+Save these codes and put them wherever you see "sudo /home/pi/433Utils/RPi_utils/codesend ' in remote_commands.py.
+
+
+6) You will need to set up the postgresql server that will save the temperature history data.
+
+        sudo apt-get install postgresql postgresql-contrib
+        sudo -u postgres psql postgres
+        (now you're on the psql command line)
+        CREATE TABLE temperature_history (datetime timestamp, temp float);
+        CREATE TABLE sleep (active bool, startHour float, endHour float);
+        INSERT INTO sleep (active, startHour, endHour) VALUES (false, -1, -1);
+        CREATE TABLE status (sleep bool thermostat bool);
+        INSERT INTO status (sleep, thermostat) VALUES (false, false);
+        CREATE TABLE therm (min float, range float);
+        INSERT INTO therm (min, range) VALUES (70, 1);
+        CREATE TABLE temp (now float);
+        ALTER USER postgres ENCRYPTED PASSWORD 'your password in pg_credentials.py here';
+        \q
+        (now you're out of the psql command line)
+        (if you want to allow outside access to your database...)
+	
+7) Adjust postgresql connection settings.
+
+        sudo nano -c /etc/postgresql/9.6/main/pg_hba.conf
+Add the following to the end of the pg_hba.conf file:
+        
+	host    all            all              192.168.0.0/24          md5
+	host    all            all              192.168.42.75/24          md5
+	host    all            all              192.168.42.64/32          md5
+	host    all            postgres          ::1/128                 md5
+	host    all            postgres         0.0.0.0/0                md5       
+
+Now do the next file...
+
+        sudo nano -c /etc/postgresql/9.4/main/postgresql.conf
+Add the following to the end of the postgresql.conf file:
+
+	temperature.max = 70.0
+	temperature.min = 69.0
+
+7) Install psycopg2 for python postgresql communication:
+
+        sudo apt-get install python-psycopg2
+	
+8) Install other required python libraries:
+
+        pip install matplotlib
+        pip install twython
+	
+If there are no devices in /sys/bus/w1/devices then add the following to the bottom of the /boot/config.txt file
+        
+	dtoverlay=w1-gpio,gpiopin=4
+
