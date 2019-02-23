@@ -13,7 +13,7 @@ def on1(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997391')
     print('turning on outlet 1')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 1 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -25,7 +25,7 @@ def off1(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997383')
     print('turning off outlet 1')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 1 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -37,7 +37,7 @@ def on2(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997387')
     print('turning on outlet 2')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 2 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -49,7 +49,7 @@ def off2(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997379')
     print('turning off outlet 2')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 2 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -61,7 +61,7 @@ def on3(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997389')
     print('turning on outlet 3')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 3 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -73,7 +73,7 @@ def off3(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997381')
     print('turning off outlet 3')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 3 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -85,7 +85,7 @@ def on4(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997390')
     print('turning on outlet 4')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 4 On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -97,7 +97,7 @@ def off4(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997382')
     print('turning off outlet 4')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='Outlet 4 Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -109,7 +109,7 @@ def onAll(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997384')
     print('turning on all outlets')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='All Outlets On', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')
@@ -121,7 +121,7 @@ def offAll(twitter, sendMessage=True):
         os.system('sudo /home/pi/433Utils/RPi_utils/codesend 997380')
     print('turning off all outlets')
     try:
-        if sendMessage:
+        if twitter is not None and sendMessage:
             twitter.send_direct_message(text='All Outlets Off', screen_name=tc.ok_user_id)
     except:
         print('error with twitter')

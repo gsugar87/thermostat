@@ -24,7 +24,6 @@ import time
 import os
 import datetime
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.dates
 import matplotlib.pyplot
@@ -38,6 +37,7 @@ import temperature_log_reader as tlr
 import postgresql_commands as psql
 import camera_commands as cc
 import traceback
+
 
 # your twitter consumer and access information goes here
 CONSUMER_KEY = tc.CONSUMER_KEY
@@ -61,7 +61,7 @@ twitter = Twython(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
 is_heater = 1
 
 # set the sleep_mode variable
-sleep_status = False  # False = sleep mode waiting to start, True = sleep mode has started, waiting to end
+sleep_status = False   # False = sleep mode waiting to start, True = sleep mode has started, waiting to end
 sleep_mode = True  # we will want to start and stop sleep mode
 # set the sleep end and start times
 sleep_start = datetime.datetime.now()
@@ -116,7 +116,7 @@ commands = {'1 ON': rc.on1,
 
 
 def make_midnight_plot(do_plot):
-    current_datetime = datetime.datetime.now()
+
     if do_plot:
         if current_datetime.hour == 0:
             # put the last 24 hours on twitter
@@ -129,10 +129,6 @@ def make_midnight_plot(do_plot):
     return do_plot
 
 
-def get_temperature():
-    return psql.get_recent_temp2()
-
-
 def run():
     do_midnight_plot = True
     while True:
@@ -141,14 +137,8 @@ def run():
         # get the current datetime
         current_datetime = datetime.datetime.now()
 
-        # Make plot if neccessary
+        # see if we want to post the date history
         do_midnight_plot = make_midnight_plot(do_midnight_plot)
-
-        # Get the temperature
-        temperature = get_temperature()
-
-        # Get the thermostat status
-
 
         # see if we should check the postgresql database
         if psql_check_time < current_time:
@@ -172,13 +162,13 @@ def run():
                     sleep_start.minute = int(psql_result[0][0] - sleep_end.hour)
                     # see if we should start the sleep status
                     if sleep_status and current_datetime.hour == sleep_start.hour and \
-                            current_datetime.minute == sleep_start.minute:
+                       current_datetime.minute == sleep_start.minute:
                         # GOING TO SLEEP!
                         sleep_status = True
                         psql.send_sql("UPDATE sleep SET active = true;")
                     # see if we should end the sleep status
                     if sleep_status and current_datetime.hour == sleep_end.hour and \
-                            current_datetime.minute == sleep_end.minute:
+                       current_datetime.minute == sleep_end.minute:
                         # WAKING UP!
                         sleep_status = False
                         psql.send_sql("UPDATE sleep SET active = false;")
@@ -220,11 +210,11 @@ def run():
                 # get the median
                 tempF = numpy.median(temps)
 
-                # tempF = tlr.get_temp()
+                #tempF = tlr.get_temp()
                 tempFstr = "%.2f" % tempF
                 psql.send_sql("DELETE FROM temp WHERE now > 0 OR now <= 0;")
                 psql.send_sql("INSERT INTO temp (now) VALUES (" + tempFstr + ");")
-                # psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
+                #psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
                 # activate heaters if neccessary
                 if tempF < thermostat_temp and not thermostat_always_off:
                     if is_heater > 0:
@@ -258,7 +248,7 @@ def run():
                 try:
                     mainDir = '/sys/bus/w1/devices'
                     allDeviceDirs = os.listdir(mainDir)
-                    # deviceNames = allDeviceDirs[0:-1]
+                    #deviceNames = allDeviceDirs[0:-1]
                     deviceNames = []
                     masterDir = ''
                     for deviceName in allDeviceDirs:
@@ -291,7 +281,7 @@ def run():
                     tempFstr = "%.2f" % tempF
                     psql.send_sql("DELETE FROM temp WHERE now > 0 OR now <= 0;")
                     psql.send_sql("INSERT INTO temp (now) VALUES (" + tempFstr + ");")
-                    # psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
+                    #psql.sendSQL("UPDATE temp SET now = " + tempFstr + ";")
 
                     # compare to thermostat threshold and send message if needed
                     if therm_tweet_check_time < current_time:
@@ -352,11 +342,11 @@ def run():
             # see if there is a new direct message
             # print('found ' + str(num_messages) + ' messages')
             for i in range(num_messages):
-                # sender_name = direct_messages[num_messages - i - 1]['sender_screen_name']
-                sender_name = direct_messages[num_messages - i - 1]['message_create']['sender_id']
+                #sender_name = direct_messages[num_messages - i - 1]['sender_screen_name']
+                sender_name = direct_messages[num_messages - i -1]['message_create']['sender_id']
                 message_id = direct_messages[num_messages - i - 1]['id']
                 if sender_name == ok_user_name:
-                    # message = direct_messages[num_messages - i - 1]['text'].upper()
+                    #message = direct_messages[num_messages - i - 1]['text'].upper()
                     message = direct_messages[num_messages - i - 1]['message_create']['message_data']['text'].upper()
                     # see what command was sent
                     print(message)
@@ -427,7 +417,7 @@ def run():
                                     psql.send_sql("DELETE FROM therm WHERE min > 0 OR min <= 0;")
                                     psql.send_sql("INSERT INTO therm VALUES (" + str(thermostat_temp) + ", " +
                                                   str(thermostat_range) + ");")
-                                    # psql.sendSQL("UPDATE therm SET now = " + tempFstr + ";")
+                                    #psql.sendSQL("UPDATE therm SET now = " + tempFstr + ";")
                                 except Exception as e:
                                     exc_type, exc_obj, exc_tb = sys.exc_info()
                                     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -460,18 +450,16 @@ def run():
                                 # turn off thermostat mode
                                 thermostat_mode = 0
                                 psql.send_sql("UPDATE status SET thermostat = false;")
-                                twitter.send_direct_message(text='Thermostat mode turned off',
-                                                            screen_name=tc.ok_user_id)
+                                twitter.send_direct_message(text='Thermostat mode turned off', screen_name=tc.ok_user_id)
                             elif message_split[0] == 'STATUS':
                                 # send the status of the thermostat
                                 message_to_send = 'Temp: %1.1f, Thermostat Mode: %d,  T Range: %d-%d,  Home: %d' % \
                                                   (tlr.get_temp(), thermostat_mode, thermostat_temp,
-                                                   thermostat_temp + thermostat_range, iPhoneStatusOld)
+                                                   thermostat_temp+thermostat_range, iPhoneStatusOld)
                                 twitter.send_direct_message(text=message_to_send, screen_name=tc.ok_user_id)
                             else:
                                 print('unknown twitter command!')
-                                twitter.send_direct_message(text='Did not understand command',
-                                                            screen_name=tc.ok_user_id)
+                                twitter.send_direct_message(text='Did not understand command', screen_name=tc.ok_user_id)
                         except Exception as e:
                             exc_type, exc_obj, exc_tb = sys.exc_info()
                             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -513,9 +501,8 @@ def run():
                         # turn off the thermostat mode and all outlets
                         thermostat_mode = 0
                         psql.send_sql("UPDATE status SET thermostat = false;")
-                        twitter.send_direct_message(
-                            text='You left the house!  Thermostat mode and all outlets turned off.',
-                            screen_name=tc.ok_user_id)
+                        twitter.send_direct_message(text='You left the house!  Thermostat mode and all outlets turned off.',
+                                                    screen_name=tc.ok_user_id)
                         rc.offAll(twitter)
                     iPhoneStatusOld = 0
             except Exception as e:
