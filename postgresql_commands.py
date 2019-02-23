@@ -2,6 +2,7 @@
 from dateutil import parser
 import re
 import psycopg2
+import psycopg2.extras
 import time
 import pg_credentials
 import os
@@ -88,8 +89,8 @@ def get_recent_temp():
 
 def get_temp_history(time1):
     try:
-        conn = psycopg2.connect("dbname='" + dbname + "' user='" + user + "' host='" + host +
-                                "' password='" + password + "'")
+        conn = psycopg2.connect("dbname='" + dbname2 + "' user='" + user2 + "' host='" + host2 +
+                                "' password='" + password2 + "'")
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         command_time_stamp = "SELECT * FROM thermostat_temperaturereading WHERE time BETWEEN '" + time1.isoformat() + "' AND now();"
         cur.execute(command_time_stamp)
