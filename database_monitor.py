@@ -16,21 +16,22 @@ def run():
                 rc.onAll(None, False)
             else:
                 rc.offAll(None, False)
-        time.sleep(1)
 
-        # See if the current temperature is within the thermostat range
-        current_temp = psql.get_recent_temp()
-        temp_max = psql.get_float_variable('temp_max')
-        temp_min = psql.get_float_variable('temp_min')
-        if current_temp < temp_min:
-            psql.turn_heater_on()
-            psql.turn_send_rf_on()
-        elif current_temp > temp_max:
-            psql.turn_heater_off()
-            psql.turn_send_rf_on()
-        else:
-            psql.turn_send_rf_off()
-
+        # See if the thermostat is on
+        if psql.is_thermostat_on():
+            # See if the current temperature is within the thermostat range
+            current_temp = float(psql.get_recent_temp()[0])
+            temp_max = psql.get_float_variable('temp_max')
+            temp_min = psql.get_float_variable('temp_min')
+            if current_temp < temp_min:
+                psql.turn_heater_on()
+                psql.turn_send_rf_on()
+            elif current_temp > temp_max:
+                psql.turn_heater_off()
+                psql.turn_send_rf_on()
+            else:
+                psql.turn_send_rf_off()
+        print("Current T: %f, Max T: %f, Min T: %f" % (current_temp, temp_max, temp_min))
 
 if __name__ == "__main__":
     run()
