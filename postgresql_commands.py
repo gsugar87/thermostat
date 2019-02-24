@@ -224,3 +224,11 @@ def get_thermostat_max_temp():
 
 def get_thermostat_min_temp():
     return get_float_variable('temp_min')
+
+
+def set_iphone_home(value):
+    set_bool_variable('iphone_home', value)
+
+
+def is_iphone_home():
+    return get_bool_variable('iphone_home')

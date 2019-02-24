@@ -5,6 +5,9 @@
 import time
 import postgresql_commands as psql
 import remote_commands as rc
+import iphone_commands as ic
+
+verbose = True
 
 
 def run():
@@ -31,7 +34,15 @@ def run():
                 psql.turn_send_rf_on()
             else:
                 psql.turn_send_rf_off()
-        print("Current T: %f, Max T: %f, Min T: %f" % (current_temp, temp_max, temp_min))
+
+        # See if the iphone is home
+        is_iphone_home = ic.ping()
+        psql.set_iphone_home(is_iphone_home)
+
+        if verbose:
+            print("Current T: %f, Max T: %f, Min T: %f Iphone Home: %s" % (current_temp, temp_max, temp_min,
+                                                                           is_iphone_home))
+
 
 if __name__ == "__main__":
     run()
