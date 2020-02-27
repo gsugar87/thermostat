@@ -1,5 +1,5 @@
 # This file contains the postgresql database interaction functions
-from dateutil import parser
+#from dateutil import parser
 import re
 import psycopg2
 import time
@@ -12,11 +12,10 @@ dbname = pg_credentials.dbname
 user = pg_credentials.user
 host = pg_credentials.host
 password = pg_credentials.password
-dbname2 = pg_credentials.dbname2
-user2 = pg_credentials.user2
-host2 = pg_credentials.host2
-password2 = pg_credentials.password2
-
+#dbname2 = pg_credentials.dbname2
+#user2 = pg_credentials.user2
+#host2 = pg_credentials.host2
+#password2 = pg_credentials.password2
 
 
 def sendReceiveSQL(command):
@@ -45,27 +44,13 @@ def sendSQL(command):
         print("PSQL send error!")
     return
 
-def writeNewTemp2(temperature, timeStamp):
-    try:
-        conn = psycopg2.connect("dbname='" + dbname2 + "' user='" + user2 + "' host='" + host2 +
-                                "' password='" + password2 + "'")
-        cur = conn.cursor()
-        command = "INSERT INTO thermostat_temperaturereading (temperature, time) VALUES (%f, '%s')" % (temperature, timeStamp)
-        cur.execute(command)
-        conn.commit()
-        conn.close()
-    except:
-        print("PSQL send error!  Couldn't log temperature")
-    return
-
 
 def writeNewTemp(temperature, timeStamp):
-    writeNewTemp2(temperature, timeStamp.replace(tzinfo=pytz.timezone('PST8PDT')))
     try:
         conn = psycopg2.connect("dbname='" + dbname + "' user='" + user + "' host='" + host +
                                 "' password='" + password + "'")
         cur = conn.cursor()
-        command = "INSERT INTO temperature_history (temp, datetime) VALUES (%f, '%s')" % (temperature, timeStamp)
+        command = "INSERT INTO living_room (temp, time) VALUES (%f, '%s')" % (temperature, timeStamp)
         cur.execute(command)
         conn.commit()
         conn.close()

@@ -1,20 +1,13 @@
-# Author: Glenn Sugar
-# This script will monitor the temperature sensors attached to the raspberry pi
-# It uses modprobe to mount the sensors to /sys/bus/w1/devices/
-
 import os
 import time
 import numpy
 import postgresql_commands as psql
 import datetime
+import pytz
 
 # make sure the system has actuated the temperature sensors
 os.system('sudo modprobe w1-gpio')
 os.system('sudo modprobe w1-therm')
-
-# set the temperature log file
-fileNameTimeFormat = "%Y_%m_%d"
-logFileName = "../bbt/temperatureLog" + time.strftime(fileNameTimeFormat, time.localtime()) + ".log"
 
 # set the time foratting we want for the log
 timeFormat = "%a, %b, %d, %Y, %H:%M:%S"
@@ -86,8 +79,6 @@ while True:
         currentTimeSec = time.localtime().tm_sec
         if currentTimeSec < oldTimeSec:
             currentTimeSec += 60
-        #print(currentTimeSec)
-        #print(oldTimeSec)
         if currentTimeSec-oldTimeSec >= logRateSec:
             oldTimeSec = time.localtime().tm_sec
             # get the average temperatures from all the devices
@@ -95,19 +86,14 @@ while True:
                 tempAvgs[i] = numpy.median(tempLists[i])
             # clear the temp lists to store new values to get the avg
             tempLists = [[] for i in range(numDevices)]
-            #print(logFileName)
-            """
-            dataFile = open(logFileName,"a")
-            dataFile.write(timeToPrint)
-            for i in range(numDevices):
-                dataFile.write(", " + str(tempAvgs[i]))
-            dataFile.write("\n")
-            dataFile.close()
-            """
             # WRITE TO POSTGRES DATABASE
-            psql.writeNewTemp(numpy.median(tempAvgs), datetime.datetime.fromtimestamp(time.mktime(time.localtime())))
+            timestamp = datetime.datetime.fromtimestamp(time.mktime(time.localtime()))
+            timestamp = timestamp.replace(tzinfo=pytz.timezone('UTC'))
+            psql.writeNewTemp(numpy.median(tempAvgs), timestamp)
             time.sleep(2)
-    except:
+    except Exception as e:
         timeToPrint = time.strftime(timeFormat, time.localtime())
         print(timeToPrint + ': Unable to open log file!')
-
+        print(type(e))
+        print(e.args)
+        print(e)
